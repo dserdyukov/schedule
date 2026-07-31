@@ -142,7 +142,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         /* ===== СТАТУСЫ ===== */
-        /* LIVE – зелёный */
         .game-item.live {
             border-left-color: #00ff88;
             background: rgba(0, 255, 136, 0.25);
@@ -154,7 +153,6 @@
             font-weight: 700;
             border-color: #00ff88;
         }
-        /* PAST – серый, полупрозрачный */
         .game-item.past {
             border-left-color: #666;
             background: rgba(100, 100, 100, 0.15);
@@ -165,7 +163,6 @@
             color: #bbb;
             border-color: #555;
         }
-        /* SOON – жёлтый */
         .game-item.soon {
             border-left-color: #ffdd00;
             background: rgba(255, 221, 0, 0.15);
@@ -175,7 +172,6 @@
             color: #000;
             border-color: #ffdd00;
         }
-        /* UPCOMING – голубой (отличается от серого) */
         .game-item.upcoming {
             border-left-color: #4fc3f7;
             background: rgba(79, 195, 247, 0.08);
@@ -206,6 +202,36 @@
         }
         .game-item.battle .status {
             margin-left: 0;
+        }
+        /* ===== СТИЛИ ДЛЯ ТАЙМЕРА ===== */
+        .timer-display {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800;
+            text-align: center;
+            text-shadow: 0 0 30px cyan, 0 0 60px magenta;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .timer-display .number {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.1em 0.4em;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        .timer-display .unit {
+            font-size: clamp(1rem, 2.5vw, 1.8rem);
+            margin: 0 0.2rem;
+            color: #8cf0ff;
+        }
+        .timer-sub {
+            text-align: center;
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            color: #aaa;
+            margin-top: 10px;
         }
         @media (max-width: 600px) {
             .content {
@@ -244,7 +270,7 @@
 <body>
     <div class="bg-custom"></div>
 
-    <!-- Страница Баскетбола -->
+    <!-- Страница 1: Баскетбол -->
     <div id="page-basketball" class="page active">
         <div class="content">
             <div class="date-header" id="dateHeaderBasket"></div>
@@ -253,7 +279,7 @@
         </div>
     </div>
 
-    <!-- Страница Battle Royale -->
+    <!-- Страница 2: Battle Royale -->
     <div id="page-battle" class="page hidden">
         <div class="content">
             <div class="date-header" id="dateHeaderBattle"></div>
@@ -262,9 +288,23 @@
         </div>
     </div>
 
+    <!-- Страница 3: Таймер до окончания -->
+    <div id="page-timer" class="page hidden">
+        <div class="content" style="text-align: center;">
+            <div class="date-header" id="timerHeader">Time left until the end</div>
+            <div class="timer-display" id="timerDisplay">
+                <span class="number" id="timerDays">00</span>
+                <span class="unit" id="timerDaysLabel">days</span>
+                <span class="number" id="timerHours">00</span>
+                <span class="unit" id="timerHoursLabel">hours</span>
+            </div>
+            <div class="timer-sub" id="timerSub">Games of the Future 2026</div>
+        </div>
+    </div>
+
     <script>
         // ============================================================
-        // ========== РАСПИСАНИЕ ПО ДНЯМ (31.07 – 03.08) =============
+        // ========== РАСПИСАНИЕ ПО ДНЯМ ===============================
         // ============================================================
 
         const schedule = {
@@ -298,12 +338,12 @@
                     { time: '18:00', teams: 'Loser 25 vs Loser 26' },
                     { time: '18:50', teams: 'Winner 25 vs Winner 26' }
                 ],
-                battle: [] // нет баттла
+                battle: []
             }
         };
 
         // ============================================================
-        // ========== ПЕРЕВОДЫ =========================================
+        // ========== ПЕРЕВОДЫ ========================================
         // ============================================================
 
         const langData = {
@@ -317,7 +357,11 @@
                 noMatches: 'No matches scheduled for today',
                 months: ['January', 'February', 'March', 'April', 'May', 'June',
                     'July', 'August', 'September', 'October', 'November', 'December'
-                ]
+                ],
+                timerTitle: 'Time left until the end',
+                timerDays: 'days',
+                timerHours: 'hours',
+                timerSub: 'Games of the Future 2026'
             },
             kz: {
                 basketball: 'Баскетбол',
@@ -329,7 +373,11 @@
                 noMatches: 'Бүгiн ойындар жоқ',
                 months: ['Қаңтар', 'Ақпан', 'Наурыз', 'Сәуiр', 'Мамыр', 'Маусым',
                     'Шiлде', 'Тамыз', 'Қыркүйек', 'Қазан', 'Қараша', 'Желтоқсан'
-                ]
+                ],
+                timerTitle: 'Аяқталғанға дейiн қалды',
+                timerDays: 'күн',
+                timerHours: 'сағат',
+                timerSub: 'Болашақ Ойындары 2026'
             }
         };
 
@@ -338,7 +386,15 @@
         // ============================================================
 
         let currentLang = 'en';
-        let currentPage = 'basketball';
+        const pageIds = ['page-basketball', 'page-battle', 'page-timer'];
+        let currentPageIndex = 0; // 0,1,2
+
+        // Целевая дата окончания: 9 августа 2026, 18:00 Астаны = 9 августа 13:00 UTC
+        const endDate = new Date(Date.UTC(2026, 7, 9, 13, 0, 0, 0));
+
+        // ============================================================
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========================
+        // ============================================================
 
         function getTodayStr() {
             const now = new Date();
@@ -352,10 +408,6 @@
             const today = getTodayStr();
             return schedule[today] || null;
         }
-
-        // ============================================================
-        // ========== ФУНКЦИИ ОТРИСОВКИ ===============================
-        // ============================================================
 
         function getAstanaTime() {
             const now = new Date();
@@ -383,6 +435,19 @@
             const map = { live: 'statusLive', past: 'statusPast', soon: 'statusSoon', upcoming: 'statusUpcoming' };
             return langData[currentLang][map[statusKey]] || 'Upcoming';
         }
+
+        function formatDate(dateStr) {
+            const parts = dateStr.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const monthName = langData[currentLang].months[month];
+            return `${day} ${monthName} ${year}`;
+        }
+
+        // ============================================================
+        // ========== ОТРИСОВКА РАСПИСАНИЯ ============================
+        // ============================================================
 
         function renderBasketball(data) {
             const list = document.getElementById('basketballList');
@@ -424,23 +489,44 @@
             });
         }
 
-        function formatDate(dateStr) {
-            const parts = dateStr.split('-');
-            const year = parseInt(parts[0]);
-            const month = parseInt(parts[1]) - 1;
-            const day = parseInt(parts[2]);
-            const monthName = langData[currentLang].months[month];
-            return `${day} ${monthName} ${year}`;
-        }
-
         function updateDateHeaders(data) {
             const today = getTodayStr();
             const header = data ? formatDate(today) : langData[currentLang].noMatches;
             document.getElementById('dateHeaderBasket').textContent = header;
             document.getElementById('dateHeaderBattle').textContent = header;
+            // Заголовки спорта
             document.getElementById('basketballTitle').textContent = langData[currentLang].basketball;
             document.getElementById('battleTitle').textContent = langData[currentLang].battle;
         }
+
+        // ============================================================
+        // ========== ТАЙМЕР ДО ОКОНЧАНИЯ =============================
+        // ============================================================
+
+        function updateTimer() {
+            const now = new Date();
+            const diff = endDate - now;
+            let days = 0, hours = 0;
+            if (diff > 0) {
+                days = Math.floor(diff / 86400000);
+                hours = Math.floor((diff % 86400000) / 3600000);
+            }
+            document.getElementById('timerDays').textContent = String(days).padStart(2, '0');
+            document.getElementById('timerHours').textContent = String(hours).padStart(2, '0');
+            // обновляем подписи единиц (при смене языка они обновятся в renderTimer)
+        }
+
+        function renderTimer() {
+            document.getElementById('timerHeader').textContent = langData[currentLang].timerTitle;
+            document.getElementById('timerDaysLabel').textContent = langData[currentLang].timerDays;
+            document.getElementById('timerHoursLabel').textContent = langData[currentLang].timerHours;
+            document.getElementById('timerSub').textContent = langData[currentLang].timerSub;
+            updateTimer(); // обновим цифры
+        }
+
+        // ============================================================
+        // ========== ОБНОВЛЕНИЕ ВСЕГО ================================
+        // ============================================================
 
         function renderAll() {
             const data = getTodayData();
@@ -449,29 +535,23 @@
             renderBasketball(basketData);
             renderBattle(battleData);
             updateDateHeaders(data);
+            renderTimer();
             document.body.classList.toggle('lang-kz', currentLang === 'kz');
         }
 
         // ============================================================
-        // ========== ПЕРЕКЛЮЧЕНИЕ =====================================
+        // ========== ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ И ЯЗЫКА ===================
         // ============================================================
 
         function switchPage() {
-            const pageBasket = document.getElementById('page-basketball');
-            const pageBattle = document.getElementById('page-battle');
-            if (currentPage === 'basketball') {
-                pageBasket.classList.remove('active');
-                pageBasket.classList.add('hidden');
-                pageBattle.classList.remove('hidden');
-                pageBattle.classList.add('active');
-                currentPage = 'battle';
-            } else {
-                pageBattle.classList.remove('active');
-                pageBattle.classList.add('hidden');
-                pageBasket.classList.remove('hidden');
-                pageBasket.classList.add('active');
-                currentPage = 'basketball';
-            }
+            const pages = pageIds.map(id => document.getElementById(id));
+            // Скрываем текущую
+            pages[currentPageIndex].classList.remove('active');
+            pages[currentPageIndex].classList.add('hidden');
+            // Переходим к следующей
+            currentPageIndex = (currentPageIndex + 1) % pages.length;
+            pages[currentPageIndex].classList.remove('hidden');
+            pages[currentPageIndex].classList.add('active');
         }
 
         function switchLanguage() {
@@ -486,6 +566,9 @@
         renderAll();
         setInterval(switchPage, 10000);
         setInterval(switchLanguage, 6000);
+        // Обновляем таймер каждую секунду (цифры)
+        setInterval(updateTimer, 1000);
+        // Также обновляем статусы матчей каждую секунду (перерисовка всего)
         setInterval(renderAll, 1000);
     </script>
 </body>
