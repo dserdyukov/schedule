@@ -141,10 +141,11 @@
             white-space: nowrap;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        /* Новая цветовая схема */
         .game-item.live {
             border-left-color: #00ff88;
-            background: rgba(0, 255, 136, 0.15);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+            background: rgba(0, 255, 136, 0.25);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
         }
         .game-item.live .status {
             background: #00ff88;
@@ -152,20 +153,31 @@
             font-weight: 700;
             border-color: #00ff88;
         }
+        .game-item.started {
+            border-left-color: #ff8800;
+            background: rgba(255, 136, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 136, 0, 0.2);
+        }
+        .game-item.started .status {
+            background: #ff8800;
+            color: #000;
+            font-weight: 700;
+            border-color: #ff8800;
+        }
         .game-item.soon {
             border-left-color: #ffdd00;
-            background: rgba(255, 221, 0, 0.10);
+            background: rgba(255, 221, 0, 0.15);
         }
         .game-item.soon .status {
             background: #ffdd00;
             color: #000;
             border-color: #ffdd00;
         }
-        .game-item.past {
+        .game-item.upcoming {
             border-left-color: #555;
-            opacity: 0.5;
+            opacity: 0.7;
         }
-        .game-item.past .status {
+        .game-item.upcoming .status {
             background: #444;
             color: #999;
             border-color: #444;
@@ -217,7 +229,6 @@
                 min-width: auto;
             }
         }
-        /* Сообщение об отсутствии матчей */
         .no-matches {
             text-align: center;
             font-size: 1.5rem;
@@ -285,9 +296,9 @@
                 basketball: 'Basketball',
                 battle: 'Battle Royale',
                 statusLive: '● LIVE',
+                statusStarted: '▶ STARTED',
                 statusSoon: '⏳ Soon',
-                statusPast: 'Finished',
-                statusDefault: 'Upcoming',
+                statusUpcoming: 'Upcoming',
                 noMatches: 'No matches scheduled for today',
                 months: ['January', 'February', 'March', 'April', 'May', 'June',
                     'July', 'August', 'September', 'October', 'November', 'December'
@@ -297,9 +308,9 @@
                 basketball: 'Баскетбол',
                 battle: 'Battle Royale',
                 statusLive: '● ЭФИРДЕ',
+                statusStarted: '▶ БАСТАЛДЫ',
                 statusSoon: '⏳ Жақында',
-                statusPast: 'Аяқталды',
-                statusDefault: 'Күтiлуде',
+                statusUpcoming: 'Күтiлуде',
                 noMatches: 'Бүгiн ойындар жоқ',
                 months: ['Қаңтар', 'Ақпан', 'Наурыз', 'Сәуiр', 'Мамыр', 'Маусым',
                     'Шiлде', 'Тамыз', 'Қыркүйек', 'Қазан', 'Қараша', 'Желтоқсан'
@@ -331,22 +342,43 @@
         // ========== ФУНКЦИИ ОТРИСОВКИ ===============================
         // ============================================================
 
-        function getStatus(gameTimeStr) {
+        // Получение текущего времени в Астане (UTC+5)
+        function getAstanaTime() {
             const now = new Date();
-            const [hours, minutes] = gameTimeStr.split(':').map(Number);
-            const gameDate = new Date(now);
-            gameDate.setHours(hours, minutes, 0, 0);
-            const diffMs = gameDate - now;
-            const diffMin = diffMs / 60000;
+            const utcHours = now.getUTCHours();
+            const utcMinutes = now.getUTCMinutes();
+            const utcSeconds = now.getUTCSeconds();
+            let astanaHours = utcHours + 5;
+            if (astanaHours >= 24) astanaHours -= 24;
+            return { hours: astanaHours, minutes: utcMinutes, seconds: utcSeconds };
+        }
 
-            if (diffMin <= 0 && diffMin > -60) return 'live';
-            else if (diffMin > 0 && diffMin <= 15) return 'soon';
-            else if (diffMin <= -60) return 'past';
-            else return 'default';
+        function getStatus(gameTimeStr) {
+            const [h, m] = gameTimeStr.split(':').map(Number);
+            const now = getAstanaTime();
+            const gameMinutes = h * 60 + m;
+            const nowMinutes = now.hours * 60 + now.minutes;
+
+            const diffMinutes = gameMinutes - nowMinutes;
+
+            if (diffMinutes <= 0 && diffMinutes > -60) {
+                return 'live'; // идёт сейчас
+            } else if (diffMinutes <= -60) {
+                return 'started'; // уже прошло больше часа (началось)
+            } else if (diffMinutes > 0 && diffMinutes <= 15) {
+                return 'soon'; // скоро
+            } else {
+                return 'upcoming'; // ожидается позже
+            }
         }
 
         function getStatusText(statusKey) {
-            const map = { live: 'statusLive', soon: 'statusSoon', past: 'statusPast', default: 'statusDefault' };
+            const map = {
+                live: 'statusLive',
+                started: 'statusStarted',
+                soon: 'statusSoon',
+                upcoming: 'statusUpcoming'
+            };
             return langData[currentLang][map[statusKey]] || 'Upcoming';
         }
 
