@@ -259,11 +259,11 @@
 
     <script>
         // ============================================================
-        // ========== РАСПИСАНИЕ ПО ДНЯМ ===============================
+        // ========== РАСПИСАНИЕ ПО ДНЯМ (ОБНОВЛЕНО) ===================
         // ============================================================
 
         const schedule = {
-            // -------- 31 июля (исправлено) --------
+            // -------- 31 июля --------
             '2026-07-31': {
                 basketball: [
                     { time: '18:00', teams: 'Flow Game Basketball vs HandsomeMDMX' },
@@ -282,8 +282,23 @@
                     { time: '20:30', teams: 'LIGA PRO TEAM vs Winner 20' }
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
+            },
+            // -------- 2 августа (НОВОЕ) --------
+            '2026-08-02': {
+                basketball: [
+                    { time: '18:00', teams: 'Winner 21 vs Winner 22' },
+                    { time: '18:50', teams: 'Winner 23 vs Winner 24' }
+                ],
+                battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
+            },
+            // -------- 3 августа (НОВОЕ) --------
+            '2026-08-03': {
+                basketball: [
+                    { time: '18:00', teams: 'Loser 25 vs Loser 26' },
+                    { time: '18:50', teams: 'Winner 25 vs Winner 26' }
+                ],
+                battle: [] // на 3 августа батла нет – пустой массив
             }
-            // -------- 2 и 3 августа можно будет добавить позже --------
         };
 
         // ============================================================
@@ -352,7 +367,7 @@
             return { hours: astanaHours, minutes: utcMinutes, seconds: utcSeconds };
         }
 
-        // ИСПРАВЛЕННАЯ ЛОГИКА СТАТУСОВ
+        // Логика статусов (исправлена: матч считается законченным через 5 минут после старта)
         function getStatus(gameTimeStr) {
             const [h, m] = gameTimeStr.split(':').map(Number);
             const now = getAstanaTime();
@@ -361,20 +376,13 @@
 
             const diffMinutes = gameMinutes - nowMinutes;
 
-            // Матч считается идущим, если начался не более 5 минут назад
             if (diffMinutes <= 0 && diffMinutes > -5) {
                 return 'live';
-            }
-            // Если прошло больше 5 минут – матч завершён
-            else if (diffMinutes <= -5) {
+            } else if (diffMinutes <= -5) {
                 return 'past';
-            }
-            // Если начнётся в ближайшие 15 минут
-            else if (diffMinutes > 0 && diffMinutes <= 15) {
+            } else if (diffMinutes > 0 && diffMinutes <= 15) {
                 return 'soon';
-            }
-            // Иначе – ожидается позже
-            else {
+            } else {
                 return 'upcoming';
             }
         }
