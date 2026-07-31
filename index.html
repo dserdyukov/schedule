@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games of the Future 2026 — Schedule</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🏀%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        /* ===== ШРИФТЫ ===== */
+        @font-face {
+            font-family: 'PHGTL';
+            src: url('https://raw.githubusercontent.com/dserdyukov/dserdyukov.github.io/main/fonts/PHGTL.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'PHGTL_KZ';
+            src: url('https://raw.githubusercontent.com/dserdyukov/dserdyukov.github.io/main/fonts/PHGTL_kz.ttf') format('truetype');
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'PHGTL', 'Orbitron', 'Segoe UI', Arial, sans-serif;
+            color: #fff;
+            background: #070b18;
+        }
+        body.lang-kz {
+            font-family: 'PHGTL_KZ', 'Orbitron', 'Segoe UI', Arial, sans-serif !important;
+        }
+        .bg-custom {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: url('https://raw.githubusercontent.com/dserdyukov/dserdyukov.github.io/main/IMG_20260225_165332_463.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: brightness(0.4);
+        }
+        .page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.8s ease;
+            opacity: 0;
+            pointer-events: none;
+            overflow-y: auto;
+        }
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .page.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .content {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(10, 15, 35, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            padding: 30px 25px 40px;
+            box-shadow: 0 0 60px rgba(0, 255, 255, 0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .date-header {
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 3.2rem);
+            text-shadow: 0 0 20px cyan, 0 0 40px magenta;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+        .sport-title {
+            font-size: clamp(1.5rem, 4vw, 2.4rem);
+            border-bottom: 2px solid rgba(0, 255, 255, 0.4);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px cyan;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+        }
+        .sport-title .emoji {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        .sport-title span:last-child {
+            flex-shrink: 0;
+        }
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .game-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 18px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border-left: 4px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            font-size: clamp(0.95rem, 1.8vw, 1.3rem);
+            flex-wrap: wrap;
+            gap: 8px 15px;
+        }
+        .game-item .time {
+            font-weight: 700;
+            color: #8cf0ff;
+            min-width: 100px;
+            font-size: clamp(1rem, 1.6vw, 1.2rem);
+        }
+        .game-item .teams {
+            flex: 1;
+            color: #eee;
+            word-break: break-word;
+        }
+        .game-item .status {
+            font-size: 0.8rem;
+            padding: 4px 14px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #aaa;
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .game-item.live {
+            border-left-color: #00ff88;
+            background: rgba(0, 255, 136, 0.15);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+        }
+        .game-item.live .status {
+            background: #00ff88;
+            color: #000;
+            font-weight: 700;
+            border-color: #00ff88;
+        }
+        .game-item.soon {
+            border-left-color: #ffdd00;
+            background: rgba(255, 221, 0, 0.10);
+        }
+        .game-item.soon .status {
+            background: #ffdd00;
+            color: #000;
+            border-color: #ffdd00;
+        }
+        .game-item.past {
+            border-left-color: #555;
+            opacity: 0.5;
+        }
+        .game-item.past .status {
+            background: #444;
+            color: #999;
+            border-color: #444;
+        }
+        /* Battle Royale – центрирование */
+        .game-item.battle {
+            justify-content: center;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            border-left: none;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 10px 20px;
+        }
+        .game-item.battle .time {
+            min-width: auto;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .game-item.battle .teams {
+            display: none;
+        }
+        .game-item.battle .status {
+            margin-left: 0;
+        }
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px 15px;
+            }
+            .game-item {
+                padding: 10px 12px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .game-item .time {
+                min-width: auto;
+            }
+            .game-item .status {
+                align-self: flex-start;
+            }
+            .game-item.battle {
+                max-width: 100%;
+                flex-direction: row;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px 12px;
+            }
+            .game-item.battle .time {
+                min-width: auto;
+            }
+        }
+        /* Сообщение об отсутствии матчей */
+        .no-matches {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #aaa;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-custom"></div>
+
+    <!-- Страница Баскетбола -->
+    <div id="page-basketball" class="page active">
+        <div class="content">
+            <div class="date-header" id="dateHeaderBasket"></div>
+            <div class="sport-title"><span class="emoji">🏀</span> <span id="basketballTitle">Basketball</span></div>
+            <div id="basketballList" class="games-list"></div>
+        </div>
+    </div>
+
+    <!-- Страница Battle Royale -->
+    <div id="page-battle" class="page hidden">
+        <div class="content">
+            <div class="date-header" id="dateHeaderBattle"></div>
+            <div class="sport-title"><span class="emoji">⚔️</span> <span id="battleTitle">Battle Royale</span></div>
+            <div id="battleList" class="games-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ========== РАСПИСАНИЕ ПО ДНЯМ ===============================
+        // ============================================================
+
+        const schedule = {
+            // -------- 31 июля --------
+            '2026-07-31': {
+                basketball: [
+                    { time: '18:50', teams: 'Zagrebacki malisani NITUI vs MINSK' },
+                    { time: '19:00', teams: 'Flow Game Basketball vs HandsomeMDMX' },
+                    { time: '19:40', teams: 'Valencia Basket vs PBC "Astana"' },
+                    { time: '20:30', teams: 'Paris Phygital vs Boca Juniors' }
+                ],
+                battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
+            },
+            // -------- 1 августа --------
+            '2026-08-01': {
+                basketball: [
+                    { time: '18:00', teams: 'Triada vs Winner 17' },
+                    { time: '18:50', teams: 'Wilders vs Winner 18' },
+                    { time: '19:40', teams: 'POWERUP vs Dangerous' },
+                    { time: '20:30', teams: 'LIGA PRO TEAM vs Winner 20' }
+                ],
+                battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
+            }
+            // -------- 2 и 3 августа можно будет добавить позже --------
+        };
+
+        // ============================================================
+        // ========== ПЕРЕВОДЫ (все казахские 'і' заменены на 'i') ====
+        // ============================================================
+
+        const langData = {
+            en: {
+                basketball: 'Basketball',
+                battle: 'Battle Royale',
+                statusLive: '● LIVE',
+                statusSoon: '⏳ Soon',
+                statusPast: 'Finished',
+                statusDefault: 'Upcoming',
+                noMatches: 'No matches scheduled for today',
+                months: ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ]
+            },
+            kz: {
+                basketball: 'Баскетбол',
+                battle: 'Battle Royale',
+                statusLive: '● ЭФИРДЕ',
+                statusSoon: '⏳ Жақында',
+                statusPast: 'Аяқталды',
+                statusDefault: 'Күтiлуде',       // было 'і' → 'i'
+                noMatches: 'Бүгiн ойындар жоқ',   // было 'і' → 'i'
+                months: ['Қаңтар', 'Ақпан', 'Наурыз', 'Сәуiр', 'Мамыр', 'Маусым',
+                    'Шiлде', 'Тамыз', 'Қыркүйек', 'Қазан', 'Қараша', 'Желтоқсан'
+                ]  // в 'Сәуiр', 'Шiлде' заменено
+            }
+        };
+
+        // ============================================================
+        // ========== ТЕКУЩЕЕ СОСТОЯНИЕ ===============================
+        // ============================================================
+
+        let currentLang = 'en';
+        let currentPage = 'basketball';
+
+        function getTodayStr() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getTodayData() {
+            const today = getTodayStr();
+            return schedule[today] || null;
+        }
+
+        // ============================================================
+        // ========== ФУНКЦИИ ОТРИСОВКИ ===============================
+        // ============================================================
+
+        function getStatus(gameTimeStr) {
+            const now = new Date();
+            const [hours, minutes] = gameTimeStr.split(':').map(Number);
+            const gameDate = new Date(now);
+            gameDate.setHours(hours, minutes, 0, 0);
+            const diffMs = gameDate - now;
+            const diffMin = diffMs / 60000;
+
+            if (diffMin <= 0 && diffMin > -60) return 'live';
+            else if (diffMin > 0 && diffMin <= 15) return 'soon';
+            else if (diffMin <= -60) return 'past';
+            else return 'default';
+        }
+
+        function getStatusText(statusKey) {
+            const map = { live: 'statusLive', soon: 'statusSoon', past: 'statusPast', default: 'statusDefault' };
+            return langData[currentLang][map[statusKey]] || 'Upcoming';
+        }
+
+        function renderBasketball(data) {
+            const list = document.getElementById('basketballList');
+            list.innerHTML = '';
+            if (!data) {
+                list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
+                return;
+            }
+            data.forEach(game => {
+                const status = getStatus(game.time);
+                const item = document.createElement('div');
+                item.className = `game-item ${status}`;
+                item.innerHTML = `
+                        <span class="time">${game.time}</span>
+                        <span class="teams">${game.teams}</span>
+                        <span class="status">${getStatusText(status)}</span>
+                    `;
+                list.appendChild(item);
+            });
+        }
+
+        function renderBattle(data) {
+            const list = document.getElementById('battleList');
+            list.innerHTML = '';
+            if (!data) {
+                list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
+                return;
+            }
+            data.forEach(time => {
+                const status = getStatus(time);
+                const item = document.createElement('div');
+                item.className = `game-item battle ${status}`;
+                item.innerHTML = `
+                        <span class="time">${time}</span>
+                        <span class="teams"></span>
+                        <span class="status">${getStatusText(status)}</span>
+                    `;
+                list.appendChild(item);
+            });
+        }
+
+        function formatDate(dateStr) {
+            const parts = dateStr.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const monthName = langData[currentLang].months[month];
+            return `${day} ${monthName} ${year}`;
+        }
+
+        function updateDateHeaders(data) {
+            const today = getTodayStr();
+            const header = data ? formatDate(today) : langData[currentLang].noMatches;
+            document.getElementById('dateHeaderBasket').textContent = header;
+            document.getElementById('dateHeaderBattle').textContent = header;
+            document.getElementById('basketballTitle').textContent = langData[currentLang].basketball;
+            document.getElementById('battleTitle').textContent = langData[currentLang].battle;
+        }
+
+        function renderAll() {
+            const data = getTodayData();
+            const basketData = data ? data.basketball : null;
+            const battleData = data ? data.battle : null;
+            renderBasketball(basketData);
+            renderBattle(battleData);
+            updateDateHeaders(data);
+            document.body.classList.toggle('lang-kz', currentLang === 'kz');
+        }
+
+        // ============================================================
+        // ========== ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ И ЯЗЫКА ===================
+        // ============================================================
+
+        function switchPage() {
+            const pageBasket = document.getElementById('page-basketball');
+            const pageBattle = document.getElementById('page-battle');
+            if (currentPage === 'basketball') {
+                pageBasket.classList.remove('active');
+                pageBasket.classList.add('hidden');
+                pageBattle.classList.remove('hidden');
+                pageBattle.classList.add('active');
+                currentPage = 'battle';
+            } else {
+                pageBattle.classList.remove('active');
+                pageBattle.classList.add('hidden');
+                pageBasket.classList.remove('hidden');
+                pageBasket.classList.add('active');
+                currentPage = 'basketball';
+            }
+        }
+
+        function switchLanguage() {
+            currentLang = (currentLang === 'en') ? 'kz' : 'en';
+            renderAll();
+        }
+
+        // ============================================================
+        // ========== ЗАПУСК ==========================================
+        // ============================================================
+
+        renderAll();
+        setInterval(switchPage, 10000);
+        setInterval(switchLanguage, 6000);
+        setInterval(renderAll, 1000);
+    </script>
+</body>
+</html>
