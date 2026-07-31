@@ -141,7 +141,8 @@
             white-space: nowrap;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        /* Статусы */
+        /* ===== СТАТУСЫ ===== */
+        /* LIVE – зелёный */
         .game-item.live {
             border-left-color: #00ff88;
             background: rgba(0, 255, 136, 0.25);
@@ -153,6 +154,7 @@
             font-weight: 700;
             border-color: #00ff88;
         }
+        /* PAST – серый, полупрозрачный */
         .game-item.past {
             border-left-color: #666;
             background: rgba(100, 100, 100, 0.15);
@@ -163,6 +165,7 @@
             color: #bbb;
             border-color: #555;
         }
+        /* SOON – жёлтый */
         .game-item.soon {
             border-left-color: #ffdd00;
             background: rgba(255, 221, 0, 0.15);
@@ -172,14 +175,16 @@
             color: #000;
             border-color: #ffdd00;
         }
+        /* UPCOMING – голубой (отличается от серого) */
         .game-item.upcoming {
-            border-left-color: #555;
-            opacity: 0.7;
+            border-left-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.08);
+            opacity: 1;
         }
         .game-item.upcoming .status {
-            background: #444;
-            color: #999;
-            border-color: #444;
+            background: #4fc3f7;
+            color: #000;
+            border-color: #4fc3f7;
         }
         /* Battle Royale – центрирование */
         .game-item.battle {
@@ -259,11 +264,10 @@
 
     <script>
         // ============================================================
-        // ========== РАСПИСАНИЕ ПО ДНЯМ (ОБНОВЛЕНО) ===================
+        // ========== РАСПИСАНИЕ ПО ДНЯМ (31.07 – 03.08) =============
         // ============================================================
 
         const schedule = {
-            // -------- 31 июля --------
             '2026-07-31': {
                 basketball: [
                     { time: '18:00', teams: 'Flow Game Basketball vs HandsomeMDMX' },
@@ -273,7 +277,6 @@
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
             },
-            // -------- 1 августа --------
             '2026-08-01': {
                 basketball: [
                     { time: '18:00', teams: 'Triada vs Winner 17' },
@@ -283,7 +286,6 @@
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
             },
-            // -------- 2 августа (НОВОЕ) --------
             '2026-08-02': {
                 basketball: [
                     { time: '18:00', teams: 'Winner 21 vs Winner 22' },
@@ -291,18 +293,17 @@
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
             },
-            // -------- 3 августа (НОВОЕ) --------
             '2026-08-03': {
                 basketball: [
                     { time: '18:00', teams: 'Loser 25 vs Loser 26' },
                     { time: '18:50', teams: 'Winner 25 vs Winner 26' }
                 ],
-                battle: [] // на 3 августа батла нет – пустой массив
+                battle: [] // нет баттла
             }
         };
 
         // ============================================================
-        // ========== ПЕРЕВОДЫ (все казахские 'і' заменены на 'i') ====
+        // ========== ПЕРЕВОДЫ =========================================
         // ============================================================
 
         const langData = {
@@ -356,51 +357,37 @@
         // ========== ФУНКЦИИ ОТРИСОВКИ ===============================
         // ============================================================
 
-        // Получение текущего времени в Астане (UTC+5)
         function getAstanaTime() {
             const now = new Date();
             const utcHours = now.getUTCHours();
             const utcMinutes = now.getUTCMinutes();
-            const utcSeconds = now.getUTCSeconds();
             let astanaHours = utcHours + 5;
             if (astanaHours >= 24) astanaHours -= 24;
-            return { hours: astanaHours, minutes: utcMinutes, seconds: utcSeconds };
+            return { hours: astanaHours, minutes: utcMinutes };
         }
 
-        // Логика статусов (исправлена: матч считается законченным через 5 минут после старта)
         function getStatus(gameTimeStr) {
             const [h, m] = gameTimeStr.split(':').map(Number);
             const now = getAstanaTime();
             const gameMinutes = h * 60 + m;
             const nowMinutes = now.hours * 60 + now.minutes;
+            const diff = gameMinutes - nowMinutes;
 
-            const diffMinutes = gameMinutes - nowMinutes;
-
-            if (diffMinutes <= 0 && diffMinutes > -5) {
-                return 'live';
-            } else if (diffMinutes <= -5) {
-                return 'past';
-            } else if (diffMinutes > 0 && diffMinutes <= 15) {
-                return 'soon';
-            } else {
-                return 'upcoming';
-            }
+            if (diff <= 0 && diff > -5) return 'live';
+            else if (diff <= -5) return 'past';
+            else if (diff > 0 && diff <= 15) return 'soon';
+            else return 'upcoming';
         }
 
         function getStatusText(statusKey) {
-            const map = {
-                live: 'statusLive',
-                past: 'statusPast',
-                soon: 'statusSoon',
-                upcoming: 'statusUpcoming'
-            };
+            const map = { live: 'statusLive', past: 'statusPast', soon: 'statusSoon', upcoming: 'statusUpcoming' };
             return langData[currentLang][map[statusKey]] || 'Upcoming';
         }
 
         function renderBasketball(data) {
             const list = document.getElementById('basketballList');
             list.innerHTML = '';
-            if (!data) {
+            if (!data || data.length === 0) {
                 list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
                 return;
             }
@@ -409,10 +396,10 @@
                 const item = document.createElement('div');
                 item.className = `game-item ${status}`;
                 item.innerHTML = `
-                        <span class="time">${game.time}</span>
-                        <span class="teams">${game.teams}</span>
-                        <span class="status">${getStatusText(status)}</span>
-                    `;
+                    <span class="time">${game.time}</span>
+                    <span class="teams">${game.teams}</span>
+                    <span class="status">${getStatusText(status)}</span>
+                `;
                 list.appendChild(item);
             });
         }
@@ -420,7 +407,7 @@
         function renderBattle(data) {
             const list = document.getElementById('battleList');
             list.innerHTML = '';
-            if (!data) {
+            if (!data || data.length === 0) {
                 list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
                 return;
             }
@@ -429,10 +416,10 @@
                 const item = document.createElement('div');
                 item.className = `game-item battle ${status}`;
                 item.innerHTML = `
-                        <span class="time">${time}</span>
-                        <span class="teams"></span>
-                        <span class="status">${getStatusText(status)}</span>
-                    `;
+                    <span class="time">${time}</span>
+                    <span class="teams"></span>
+                    <span class="status">${getStatusText(status)}</span>
+                `;
                 list.appendChild(item);
             });
         }
@@ -466,7 +453,7 @@
         }
 
         // ============================================================
-        // ========== ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ И ЯЗЫКА ===================
+        // ========== ПЕРЕКЛЮЧЕНИЕ =====================================
         // ============================================================
 
         function switchPage() {
