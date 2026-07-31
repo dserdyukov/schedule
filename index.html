@@ -304,6 +304,11 @@
 
     <script>
         // ============================================================
+        // ========== ДЛИТЕЛЬНОСТЬ МАТЧА (для последнего) =============
+        // ============================================================
+        const MATCH_DURATION = 45; // минут
+
+        // ============================================================
         // ========== РАСПИСАНИЕ ПО ДНЯМ ===============================
         // ============================================================
 
@@ -387,9 +392,8 @@
 
         let currentLang = 'en';
         const pageIds = ['page-basketball', 'page-battle', 'page-timer'];
-        let currentPageIndex = 0; // 0,1,2
+        let currentPageIndex = 0;
 
-        // Целевая дата окончания: 9 августа 2026, 18:00 Астаны = 9 августа 13:00 UTC
         const endDate = new Date(Date.UTC(2026, 7, 9, 13, 0, 0, 0));
 
         // ============================================================
@@ -418,17 +422,33 @@
             return { hours: astanaHours, minutes: utcMinutes };
         }
 
-        function getStatus(gameTimeStr) {
+        // ============================================================
+        // ========== НОВАЯ ЛОГИКА СТАТУСОВ ===========================
+        // ============================================================
+
+        function getStatus(gameTimeStr, nextGameTimeStr) {
             const [h, m] = gameTimeStr.split(':').map(Number);
             const now = getAstanaTime();
             const gameMinutes = h * 60 + m;
             const nowMinutes = now.hours * 60 + now.minutes;
-            const diff = gameMinutes - nowMinutes;
 
-            if (diff <= 0 && diff > -5) return 'live';
-            else if (diff <= -5) return 'past';
-            else if (diff > 0 && diff <= 15) return 'soon';
-            else return 'upcoming';
+            let endMinutes;
+            if (nextGameTimeStr) {
+                const [nh, nm] = nextGameTimeStr.split(':').map(Number);
+                endMinutes = nh * 60 + nm;
+            } else {
+                endMinutes = gameMinutes + MATCH_DURATION;
+            }
+
+            if (nowMinutes < gameMinutes) {
+                const diff = gameMinutes - nowMinutes;
+                if (diff <= 15) return 'soon';
+                else return 'upcoming';
+            } else if (nowMinutes >= gameMinutes && nowMinutes < endMinutes) {
+                return 'live';
+            } else {
+                return 'past';
+            }
         }
 
         function getStatusText(statusKey) {
@@ -456,8 +476,10 @@
                 list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
                 return;
             }
-            data.forEach(game => {
-                const status = getStatus(game.time);
+            data.forEach((game, index) => {
+                const nextGame = (index < data.length - 1) ? data[index + 1] : null;
+                const nextTime = nextGame ? nextGame.time : null;
+                const status = getStatus(game.time, nextTime);
                 const item = document.createElement('div');
                 item.className = `game-item ${status}`;
                 item.innerHTML = `
@@ -476,8 +498,9 @@
                 list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
                 return;
             }
-            data.forEach(time => {
-                const status = getStatus(time);
+            data.forEach((time, index) => {
+                const nextTime = (index < data.length - 1) ? data[index + 1] : null;
+                const status = getStatus(time, nextTime);
                 const item = document.createElement('div');
                 item.className = `game-item battle ${status}`;
                 item.innerHTML = `
@@ -494,7 +517,6 @@
             const header = data ? formatDate(today) : langData[currentLang].noMatches;
             document.getElementById('dateHeaderBasket').textContent = header;
             document.getElementById('dateHeaderBattle').textContent = header;
-            // Заголовки спорта
             document.getElementById('basketballTitle').textContent = langData[currentLang].basketball;
             document.getElementById('battleTitle').textContent = langData[currentLang].battle;
         }
@@ -513,7 +535,6 @@
             }
             document.getElementById('timerDays').textContent = String(days).padStart(2, '0');
             document.getElementById('timerHours').textContent = String(hours).padStart(2, '0');
-            // обновляем подписи единиц (при смене языка они обновятся в renderTimer)
         }
 
         function renderTimer() {
@@ -521,7 +542,7 @@
             document.getElementById('timerDaysLabel').textContent = langData[currentLang].timerDays;
             document.getElementById('timerHoursLabel').textContent = langData[currentLang].timerHours;
             document.getElementById('timerSub').textContent = langData[currentLang].timerSub;
-            updateTimer(); // обновим цифры
+            updateTimer();
         }
 
         // ============================================================
@@ -545,10 +566,8 @@
 
         function switchPage() {
             const pages = pageIds.map(id => document.getElementById(id));
-            // Скрываем текущую
             pages[currentPageIndex].classList.remove('active');
             pages[currentPageIndex].classList.add('hidden');
-            // Переходим к следующей
             currentPageIndex = (currentPageIndex + 1) % pages.length;
             pages[currentPageIndex].classList.remove('hidden');
             pages[currentPageIndex].classList.add('active');
@@ -566,9 +585,7 @@
         renderAll();
         setInterval(switchPage, 10000);
         setInterval(switchLanguage, 6000);
-        // Обновляем таймер каждую секунду (цифры)
         setInterval(updateTimer, 1000);
-        // Также обновляем статусы матчей каждую секунду (перерисовка всего)
         setInterval(renderAll, 1000);
     </script>
 </body>
