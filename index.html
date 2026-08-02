@@ -112,25 +112,28 @@
         .game-item {
             display: flex;
             align-items: center;
+            justify-content: space-between; /* время слева, статус справа */
             padding: 12px 18px;
             border-radius: 16px;
             background: rgba(255, 255, 255, 0.04);
             border-left: 4px solid rgba(255, 255, 255, 0.15);
             transition: all 0.3s ease;
             font-size: clamp(0.95rem, 1.8vw, 1.3rem);
-            flex-wrap: wrap;
             gap: 8px 15px;
         }
         .game-item .time {
             font-weight: 700;
             color: #8cf0ff;
-            min-width: 100px;
+            min-width: 100px;      /* фиксированная ширина для времени */
+            flex-shrink: 0;
             font-size: clamp(1rem, 1.6vw, 1.2rem);
         }
         .game-item .teams {
             flex: 1;
             color: #eee;
             word-break: break-word;
+            text-align: left;
+            padding: 0 10px;
         }
         .game-item .status {
             font-size: 0.8rem;
@@ -140,6 +143,9 @@
             color: #aaa;
             white-space: nowrap;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;       /* чтобы статус не сжимался */
+            text-align: center;
+            min-width: 80px;
         }
         /* ===== СТАТУСЫ ===== */
         .game-item.live {
@@ -182,26 +188,15 @@
             color: #000;
             border-color: #4fc3f7;
         }
-        /* Battle Royale – центрирование */
-        .game-item.battle {
-            justify-content: center;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-            border-left: none;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 10px 20px;
+        /* Battle Royale – убираем центрирование, наследуем общий стиль */
+        .game-item.battle .teams {
+            display: none;          /* скрываем блок команд */
         }
         .game-item.battle .time {
-            min-width: auto;
-            text-align: center;
-            margin-right: 10px;
-        }
-        .game-item.battle .teams {
-            display: none;
+            min-width: 100px;
         }
         .game-item.battle .status {
-            margin-left: 0;
+            min-width: 80px;
         }
         /* ===== СТИЛИ ДЛЯ ТАЙМЕРА ===== */
         .timer-display {
@@ -239,24 +234,27 @@
             }
             .game-item {
                 padding: 10px 12px;
-                flex-direction: column;
-                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 5px;
             }
             .game-item .time {
-                min-width: auto;
+                min-width: 80px;
             }
             .game-item .status {
-                align-self: flex-start;
+                min-width: 60px;
+                font-size: 0.7rem;
+                padding: 2px 10px;
             }
-            .game-item.battle {
-                max-width: 100%;
-                flex-direction: row;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 8px 12px;
+            .game-item .teams {
+                flex-basis: 100%;
+                padding-left: 0;
+                margin-top: 4px;
+            }
+            .game-item.battle .teams {
+                display: none;
             }
             .game-item.battle .time {
-                min-width: auto;
+                min-width: 80px;
             }
         }
         .no-matches {
@@ -288,7 +286,25 @@
         </div>
     </div>
 
-    <!-- Страница 3: Таймер до окончания -->
+    <!-- Страница 3: Футбол -->
+    <div id="page-football" class="page hidden">
+        <div class="content">
+            <div class="date-header" id="dateHeaderFootball"></div>
+            <div class="sport-title"><span class="emoji">⚽</span> <span id="footballTitle">Football</span></div>
+            <div id="footballList" class="games-list"></div>
+        </div>
+    </div>
+
+    <!-- Страница 4: Лазертаг -->
+    <div id="page-laser" class="page hidden">
+        <div class="content">
+            <div class="date-header" id="dateHeaderLaser"></div>
+            <div class="sport-title"><span class="emoji">🔫</span> <span id="laserTitle">Laser Tag</span></div>
+            <div id="laserList" class="games-list"></div>
+        </div>
+    </div>
+
+    <!-- Страница 5: Таймер до окончания -->
     <div id="page-timer" class="page hidden">
         <div class="content" style="text-align: center;">
             <div class="date-header" id="timerHeader">Time left until the end</div>
@@ -309,10 +325,11 @@
         const MATCH_DURATION = 45; // минут
 
         // ============================================================
-        // ========== РАСПИСАНИЕ ПО ДНЯМ ===============================
+        // ========== ПОЛНОЕ РАСПИСАНИЕ (31.07 – 09.08) ===============
         // ============================================================
 
         const schedule = {
+            // -------- 31 июля --------
             '2026-07-31': {
                 basketball: [
                     { time: '18:00', teams: 'Flow Game Basketball vs HandsomeMDMX' },
@@ -322,6 +339,7 @@
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
             },
+            // -------- 1 августа --------
             '2026-08-01': {
                 basketball: [
                     { time: '18:00', teams: 'Triada vs Flow Game Basketball' },
@@ -331,6 +349,7 @@
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
             },
+            // -------- 2 августа --------
             '2026-08-02': {
                 basketball: [
                     { time: '18:00', teams: 'Triada vs Wilders' },
@@ -338,12 +357,97 @@
                 ],
                 battle: ['14:00', '14:55', '15:35', '16:15', '16:55']
             },
+            // -------- 3 августа --------
             '2026-08-03': {
                 basketball: [
                     { time: '18:00', teams: 'Loser 25 vs Loser 26' },
                     { time: '18:50', teams: 'Winner 25 vs Winner 26' }
                 ],
                 battle: []
+            },
+            // -------- 4 августа (Футбол + Лазертаг) --------
+            '2026-08-04': {
+                football: [
+                    { time: '11:00', teams: 'UEL team vs NS Team' },
+                    { time: '12:15', teams: 'Club Holcattes vs FC 10' },
+                    { time: '13:30', teams: 'Noname Club vs FC OLYMPIC PHYGITAL' },
+                    { time: '14:45', teams: 'ORLANDO PIRATES FIVES vs Tamo Junto' },
+                    { time: '16:00', teams: 'Quetzales-Armadillos vs KMF TITOGRAD' },
+                    { time: '17:15', teams: 'FFK "ROTOR CISS" vs The Vicious' },
+                    { time: '18:30', teams: 'Oeste SP vs ACF x Allur' },
+                    { time: '19:45', teams: 'Penarol vs LOS TRONCOS FC' }
+                ],
+                laser: [
+                    { time: '10:00', teams: 'Team KZ vs MIRAGE TEAM' },
+                    { time: '13:05', teams: 'Liga Pro Team vs PEDRAJAS vs Klan Pedrajas' },
+                    { time: '16:10', teams: 'NOVAQ vs Eternal Fire' },
+                    { time: '19:15', teams: 'Mink House vs Team Hybrids' }
+                ]
+            },
+            // -------- 5 августа (Футбол + Лазертаг) --------
+            '2026-08-05': {
+                football: [
+                    { time: '11:00', teams: 'Laser 1 vs Laser 2' },
+                    { time: '12:15', teams: 'Laser 3 vs Laser 4' },
+                    { time: '13:30', teams: 'Winner 1 vs Winner 2' },
+                    { time: '14:45', teams: 'Winner 3 vs Winner 4' },
+                    { time: '16:00', teams: 'Loser 5 vs Loser 6' },
+                    { time: '17:15', teams: 'Loser 7 vs Loser 8' },
+                    { time: '18:30', teams: 'Winner 5 vs Winner 6' },
+                    { time: '19:45', teams: 'Winner 7 vs Winner 8' }
+                ],
+                laser: [
+                    { time: '10:00', teams: 'Team KZ vs Liga Pro Team' },
+                    { time: '13:05', teams: 'MIRAGE TEAM vs Klan Pedrajas' },
+                    { time: '16:10', teams: 'NOVAQ vs Minsk House' },
+                    { time: '19:15', teams: 'Eternal Fire vs Team Hybrids' }
+                ]
+            },
+            // -------- 6 августа (Футбол + Лазертаг) --------
+            '2026-08-06': {
+                football: [
+                    { time: '16:00', teams: 'Loser 12 vs Winner 9' },
+                    { time: '17:15', teams: 'Loser 11 vs Winner 10' },
+                    { time: '18:30', teams: 'Loser 16 vs Winner 13' },
+                    { time: '19:45', teams: 'Loser 15 vs Winner 14' }
+                ],
+                laser: [
+                    { time: '10:00', teams: 'Klan Pedrajas vs Team KZ' },
+                    { time: '13:05', teams: 'Liga Pro Team vs MIRAGE TEAM' },
+                    { time: '16:10', teams: 'Team Hybrids vs NOVAQ' },
+                    { time: '19:15', teams: 'Mink House vs Eternal Fire' }
+                ]
+            },
+            // -------- 7 августа (Футбол + Лазертаг) --------
+            '2026-08-07': {
+                football: [
+                    { time: '16:00', teams: 'Winner 15 vs Winner 17' },
+                    { time: '17:15', teams: 'Winner 16 vs Winner 18' },
+                    { time: '18:30', teams: 'Winner 11 vs Winner 19' },
+                    { time: '19:45', teams: 'Winner 12 vs Winner 20' }
+                ],
+                laser: [
+                    { time: '16:00', teams: '1st in Group A vs 2nd in Group B' },
+                    { time: '19:05', teams: '1st in Group B vs 2nd in Group A' }
+                ]
+            },
+            // -------- 8 августа (Футбол + Лазертаг) --------
+            '2026-08-08': {
+                football: [
+                    { time: '13:00', teams: 'Winner 21 vs Winner 22' },
+                    { time: '14:15', teams: 'Winner 23 vs Winner 24' }
+                ],
+                laser: [
+                    { time: '16:00', teams: 'Loser 13 vs Loser 14' },
+                    { time: '19:05', teams: 'Winner 13 vs Winner 14' }
+                ]
+            },
+            // -------- 9 августа (только Футбол) --------
+            '2026-08-09': {
+                football: [
+                    { time: '16:30', teams: 'Loser 25 vs Loser 26' },
+                    { time: '18:00', teams: 'Winner 25 vs Winner 26' }
+                ]
             }
         };
 
@@ -355,6 +459,8 @@
             en: {
                 basketball: 'Basketball',
                 battle: 'Battle Royale',
+                football: 'Football',
+                laser: 'Laser Tag',
                 statusLive: '● LIVE',
                 statusPast: 'Finished',
                 statusSoon: '⏳ Soon',
@@ -371,6 +477,8 @@
             kz: {
                 basketball: 'Баскетбол',
                 battle: 'Battle Royale',
+                football: 'Футбол',
+                laser: 'Лазертаг',
                 statusLive: '● ЭФИРДЕ',
                 statusPast: 'Аяқталды',
                 statusSoon: '⏳ Жақында',
@@ -391,10 +499,11 @@
         // ============================================================
 
         let currentLang = 'en';
-        const pageIds = ['page-basketball', 'page-battle', 'page-timer'];
+        let activePageIds = [];
         let currentPageIndex = 0;
 
-        const endDate = new Date(Date.UTC(2026, 7, 9, 13, 0, 0, 0));
+        // ЦЕЛЬ: 9 августа 2026, 19:00 по Астане → 14:00 UTC
+        const endDate = new Date(Date.UTC(2026, 7, 9, 14, 0, 0, 0));
 
         // ============================================================
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========================
@@ -423,7 +532,7 @@
         }
 
         // ============================================================
-        // ========== НОВАЯ ЛОГИКА СТАТУСОВ ===========================
+        // ========== ЛОГИКА СТАТУСОВ ==================================
         // ============================================================
 
         function getStatus(gameTimeStr, nextGameTimeStr) {
@@ -466,63 +575,75 @@
         }
 
         // ============================================================
-        // ========== ОТРИСОВКА РАСПИСАНИЯ ============================
+        // ========== УНИВЕРСАЛЬНАЯ ОТРИСОВКА ==========================
         // ============================================================
 
-        function renderBasketball(data) {
-            const list = document.getElementById('basketballList');
+        function renderSport(listId, data, isBattle = false) {
+            const list = document.getElementById(listId);
             list.innerHTML = '';
             if (!data || data.length === 0) {
                 list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
                 return;
             }
-            data.forEach((game, index) => {
-                const nextGame = (index < data.length - 1) ? data[index + 1] : null;
-                const nextTime = nextGame ? nextGame.time : null;
-                const status = getStatus(game.time, nextTime);
-                const item = document.createElement('div');
-                item.className = `game-item ${status}`;
-                item.innerHTML = `
-                    <span class="time">${game.time}</span>
-                    <span class="teams">${game.teams}</span>
-                    <span class="status">${getStatusText(status)}</span>
-                `;
-                list.appendChild(item);
+            const sorted = [...data].sort((a, b) => {
+                const timeA = typeof a === 'string' ? a : a.time;
+                const timeB = typeof b === 'string' ? b : b.time;
+                return timeA.localeCompare(timeB);
             });
-        }
-
-        function renderBattle(data) {
-            const list = document.getElementById('battleList');
-            list.innerHTML = '';
-            if (!data || data.length === 0) {
-                list.innerHTML = `<div class="no-matches">${langData[currentLang].noMatches}</div>`;
-                return;
-            }
-            data.forEach((time, index) => {
-                const nextTime = (index < data.length - 1) ? data[index + 1] : null;
+            sorted.forEach((item, index) => {
+                let time, teams;
+                if (typeof item === 'string') {
+                    time = item;
+                    teams = '';
+                } else {
+                    time = item.time;
+                    teams = item.teams;
+                }
+                const nextItem = (index < sorted.length - 1) ? sorted[index + 1] : null;
+                const nextTime = nextItem ? (typeof nextItem === 'string' ? nextItem : nextItem.time) : null;
                 const status = getStatus(time, nextTime);
-                const item = document.createElement('div');
-                item.className = `game-item battle ${status}`;
-                item.innerHTML = `
+                const div = document.createElement('div');
+                div.className = `game-item ${status}${isBattle ? ' battle' : ''}`;
+                div.innerHTML = `
                     <span class="time">${time}</span>
-                    <span class="teams"></span>
+                    ${isBattle ? '' : `<span class="teams">${teams}</span>`}
                     <span class="status">${getStatusText(status)}</span>
                 `;
-                list.appendChild(item);
+                list.appendChild(div);
             });
         }
 
-        function updateDateHeaders(data) {
+        function updateHeaders(data) {
             const today = getTodayStr();
             const header = data ? formatDate(today) : langData[currentLang].noMatches;
             document.getElementById('dateHeaderBasket').textContent = header;
             document.getElementById('dateHeaderBattle').textContent = header;
+            document.getElementById('dateHeaderFootball').textContent = header;
+            document.getElementById('dateHeaderLaser').textContent = header;
             document.getElementById('basketballTitle').textContent = langData[currentLang].basketball;
             document.getElementById('battleTitle').textContent = langData[currentLang].battle;
+            document.getElementById('footballTitle').textContent = langData[currentLang].football;
+            document.getElementById('laserTitle').textContent = langData[currentLang].laser;
         }
 
         // ============================================================
-        // ========== ТАЙМЕР ДО ОКОНЧАНИЯ =============================
+        // ========== ОПРЕДЕЛЕНИЕ АКТИВНЫХ СТРАНИЦ ====================
+        // ============================================================
+
+        function getActivePages() {
+            const data = getTodayData();
+            const pages = [];
+            if (data && data.basketball && data.basketball.length > 0) pages.push('page-basketball');
+            if (data && data.battle && data.battle.length > 0) pages.push('page-battle');
+            if (data && data.football && data.football.length > 0) pages.push('page-football');
+            if (data && data.laser && data.laser.length > 0) pages.push('page-laser');
+            // Таймер всегда добавляем
+            pages.push('page-timer');
+            return pages;
+        }
+
+        // ============================================================
+        // ========== ТАЙМЕР ===========================================
         // ============================================================
 
         function updateTimer() {
@@ -551,13 +672,38 @@
 
         function renderAll() {
             const data = getTodayData();
-            const basketData = data ? data.basketball : null;
-            const battleData = data ? data.battle : null;
-            renderBasketball(basketData);
-            renderBattle(battleData);
-            updateDateHeaders(data);
+            const basketData = data && data.basketball ? data.basketball : null;
+            const battleData = data && data.battle ? data.battle : null;
+            const footballData = data && data.football ? data.football : null;
+            const laserData = data && data.laser ? data.laser : null;
+
+            renderSport('basketballList', basketData, false);
+            renderSport('battleList', battleData, true);
+            renderSport('footballList', footballData, false);
+            renderSport('laserList', laserData, false);
+
+            updateHeaders(data);
             renderTimer();
             document.body.classList.toggle('lang-kz', currentLang === 'kz');
+
+            // Обновляем список активных страниц
+            const newActive = getActivePages();
+            if (newActive.length !== activePageIds.length || 
+                newActive.some((id, i) => id !== activePageIds[i])) {
+                activePageIds = newActive;
+                if (currentPageIndex >= activePageIds.length) {
+                    currentPageIndex = 0;
+                }
+                document.querySelectorAll('.page').forEach(el => {
+                    el.classList.remove('active');
+                    el.classList.add('hidden');
+                });
+                const currentPage = document.getElementById(activePageIds[currentPageIndex]);
+                if (currentPage) {
+                    currentPage.classList.remove('hidden');
+                    currentPage.classList.add('active');
+                }
+            }
         }
 
         // ============================================================
@@ -565,7 +711,8 @@
         // ============================================================
 
         function switchPage() {
-            const pages = pageIds.map(id => document.getElementById(id));
+            if (activePageIds.length === 0) return;
+            const pages = activePageIds.map(id => document.getElementById(id));
             pages[currentPageIndex].classList.remove('active');
             pages[currentPageIndex].classList.add('hidden');
             currentPageIndex = (currentPageIndex + 1) % pages.length;
@@ -581,6 +728,22 @@
         // ============================================================
         // ========== ЗАПУСК ==========================================
         // ============================================================
+
+        // Инициализация
+        activePageIds = getActivePages();
+        if (activePageIds.length === 0) {
+            activePageIds = ['page-timer'];
+        }
+        currentPageIndex = 0;
+        document.querySelectorAll('.page').forEach(el => {
+            el.classList.remove('active');
+            el.classList.add('hidden');
+        });
+        const firstPage = document.getElementById(activePageIds[0]);
+        if (firstPage) {
+            firstPage.classList.remove('hidden');
+            firstPage.classList.add('active');
+        }
 
         renderAll();
         setInterval(switchPage, 10000);
